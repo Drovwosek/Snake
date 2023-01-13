@@ -5,6 +5,7 @@
 #include <conio.h>
 #include <windows.h>
 #include <ctime> 
+#include <cstdlib>
 
 using namespace std;
 
@@ -26,9 +27,20 @@ namespace keysCodes
 
 namespace game
 {
-    int const NUMBER_OF_COLUMNS = 30, NUMBER_OF_ROWS = 20, DELAY = 300;
-    char const EMPTY_SYMBOL = ' ', BORDER_SYMBOL = '#', SNAKE_SYMBOL = '@', APPLE_SYMBOL = '*';
-    bool isAppleEaten = false, isEnd = false, isHit = false, isVictory = false;
+    int const NUMBER_OF_COLUMNS = 20,
+        NUMBER_OF_ROWS = 20,
+        DELAY = 300,
+        SNAKE_MIN = 2;
+
+    char const EMPTY_SYMBOL = ' ', 
+        BORDER_SYMBOL = '|', 
+        SNAKE_SYMBOL = 'O', 
+        APPLE_SYMBOL = '@';
+        
+    bool isAppleEaten = false, 
+        isEnd = false, 
+        isHit = false, 
+        isVictory = false;
 
     vector<char> border(NUMBER_OF_COLUMNS + 2, BORDER_SYMBOL);
 }
@@ -70,12 +82,12 @@ void setUpDirection(coordinates& newCoors, int& direction)
             direction = keysCodes::LEFT;
             newCoors.y--;
         }
-    }   
+    }
 }
 
 void setDownDirection(coordinates& newCoors, int& direction)
 {
-   if (++newCoors.x >= game::NUMBER_OF_ROWS)
+    if (++newCoors.x >= game::NUMBER_OF_ROWS)
     {
         game::isHit = true;
         --newCoors.x;
@@ -243,6 +255,15 @@ void draw(vector<vector<char>>& field)
     drawField(field);
 }
 
+coordinates getRandomCoors()
+{
+ /*координаты генерируются с отступами от стенки => поле должно быть больше чем 15 клеток(3*5) */
+    int x, y;
+    x = 2 + rand() % (game::NUMBER_OF_ROWS - 2); 
+    y = 2 + rand() % (game::NUMBER_OF_COLUMNS - 2); 
+    return  { x, y };
+}
+
 int getKeyIfPressed()
 {
     if (_kbhit())
@@ -267,13 +288,16 @@ void printResultMessage()
 
 int main()
 {
-    vector<vector<char>> field;
-    vector<coordinates> snake = { {2, 2}, {2, 3} };
-    coordinates apple(3, 3);
-    int i_input, symbolNotDefined = -1, direction = keysCodes::LEFT;
-
     srand((unsigned)time(0));
+    vector<vector<char>> field;
 
+    coordinates headOfSnake = getRandomCoors();
+    coordinates tailOfSnake = {headOfSnake.x, headOfSnake.y + 1 };
+    
+    vector<coordinates> snake = { headOfSnake, tailOfSnake };
+    coordinates apple = getRandomCoors();
+    int i_input, symbolNotDefined = -1, direction = keysCodes::LEFT;
+    
     do
     {
         initField(field, game::NUMBER_OF_ROWS, game::NUMBER_OF_COLUMNS, game::EMPTY_SYMBOL);
@@ -294,7 +318,7 @@ int main()
         Sleep(game::DELAY);
         setCur(0, 0);
 
-        if (snake.size() < 2)
+        if (snake.size() < game::SNAKE_MIN)
         {
             game::isEnd = true;
         }
